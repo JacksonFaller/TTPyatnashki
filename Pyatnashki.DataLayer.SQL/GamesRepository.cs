@@ -42,10 +42,26 @@ namespace Pyatnashki.DataLayer.SQL
                     {
                         if (!reader.Read())
                             return null;
-                        return new Game
-                        {
-                            Name = reader.GetString(reader.GetOrdinal("Name"))
-                        };
+                            //throw new ArgumentException($"Игра с названием: {name} не найдена");
+                        return new Game(reader.GetString(reader.GetOrdinal("Name")));
+                    }
+                }
+            }
+        }
+
+        public bool DeleteGame(string name)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "delete from Games output deleted.Name where Name = @name";
+                    command.Parameters.AddWithValue("@name", name);
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        return reader.Read();
                     }
                 }
             }

@@ -6,7 +6,7 @@ using Pyatnashki.Model;
 
 namespace Pyatnashki.DataLayer.SQL
 {
-    class PlayersRepository : IPlayersRepository
+    public class PlayersRepository : IPlayersRepository
     {
         private readonly string _connectionString;
 
@@ -35,17 +35,33 @@ namespace Pyatnashki.DataLayer.SQL
                 connection.Open();
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "select * from Players where name = @name";
+                    command.CommandText = "select * from Players where Name = @name";
                     command.Parameters.AddWithValue("@name", name);
 
                     using (var reader = command.ExecuteReader())
                     {
                         if (!reader.Read())
                             return null;
-                        return new Player
-                        {
-                            Name = reader.GetString(reader.GetOrdinal("Name"))
-                        };
+                            //throw new ArgumentException($"Пользователь с именем: {name} не найден");
+                        return new Player(reader.GetString(reader.GetOrdinal("Name")));
+                    }
+                }
+            }
+        }
+
+        public bool DeletePlayer(string name)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "delete from Players output deleted.Name where Name = @name";
+                    command.Parameters.AddWithValue("@name", name);
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        return reader.Read();
                     }
                 }
             }

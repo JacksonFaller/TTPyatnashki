@@ -10,6 +10,6 @@ namespace Pyatnashki.DataLayer
     public interface IScoresRepository
     {
         void AddScore(Score score);
-        IEnumerator<Score> GetScores(Game game, Player player);
+        IEnumerable<Score> GetScores(Game game, Player player);
     }
 }

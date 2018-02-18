@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Text;
 using Pyatnashki.Model;
 
 namespace Pyatnashki.DataLayer.SQL
 {
-    class ScoresRepository : IScoresRepository
+    public class ScoresRepository : IScoresRepository
     {
         private readonly string _connectionString;
 
@@ -22,28 +23,53 @@ namespace Pyatnashki.DataLayer.SQL
                 connection.Open();
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = 
-                        "insert into Scores values (@matchId, @playerName, @gameName, @time, @score, @turnsNumber)";
-                    command.Parameters.AddWithValue("@matchId", score.MatchId);
+                    StringBuilder commandBuilder = new StringBuilder(
+                        "insert into Scores(Id, PlayerName, GameName");
+
+                    StringBuilder values = new StringBuilder("values (@id, @playerName, @gameName");
+
+                    command.Parameters.AddWithValue("@id", score.Id);
                     command.Parameters.AddWithValue("@playerName", score.PlayerName);
                     command.Parameters.AddWithValue("@gameName", score.GameName);
-                    command.Parameters.AddWithValue("@time", score.Time);
-                    command.Parameters.AddWithValue("@score", score.Scores);
-                    command.Parameters.AddWithValue("@turnsNumber", score.TurnsNumber);
 
+                    if(score.Time == null && score.TurnsNumber == null && score.Scores == null)
+                        throw new ArgumentException(
+                            "At least one parameter of the score (Time, TurnsNumber, Scores) should be not null");
+
+                    if (score.Time != null)
+                    {
+                        commandBuilder.Append(", Time");
+                        values.Append(", @time");
+                        command.Parameters.AddWithValue("@time", score.Time?.Ticks);
+                    }
+                    if (score.TurnsNumber != null)
+                    {
+                        commandBuilder.Append(", TurnsNumber");
+                        values.Append(", @turnsNumber");
+                        command.Parameters.AddWithValue("@turnsNumber", score.TurnsNumber);
+                    }
+                    if (score.Scores != null)
+                    {
+                        commandBuilder.Append(", Score");
+                        values.Append(", @score");
+                        command.Parameters.AddWithValue("@score", score.Scores);
+                    }
+
+                    commandBuilder.Append($"){values})");
+                    command.CommandText = commandBuilder.ToString();
                     command.ExecuteNonQuery();
                 }
             }
         }
 
-        public IEnumerator<Score> GetScores(Game game, Player player)
+        public IEnumerable<Score> GetScores(Game game, Player player)
         {
             using (var connection = new SqlConnection(_connectionString))
             {
                 connection.Open();
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "select * from Scores where playerName = @playerName and gameName = @gameName";
+                    command.CommandText = "select * from Scores where PlayerName = @playerName and GameName = @gameName";
                     command.Parameters.AddWithValue("@playerName", player.Name);
                     command.Parameters.AddWithValue("@gameName", game.Name);
 
@@ -51,17 +77,83 @@ namespace Pyatnashki.DataLayer.SQL
                     {
                         while (reader.Read())
                         {
+                            int? score = null, turnsNumber = null;
+                            TimeSpan? time = null;
+
+                            if (!reader.IsDBNull(reader.GetOrdinal("Score")))
+                                score = reader.GetInt32(reader.GetOrdinal("Score"));
+                            if (!reader.IsDBNull(reader.GetOrdinal("Time")))
+                                time = TimeSpan.FromTicks(reader.GetInt64(reader.GetOrdinal("Time")));
+                            if (!reader.IsDBNull(reader.GetOrdinal("TurnsNumber")))
+                                turnsNumber = reader.GetInt32(reader.GetOrdinal("TurnsNumber"));
+
                             yield return new Score
                             {
-                                //Name = reader.GetString(reader.GetOrdinal("Name"))
-                                GameName = game.Name,
+                                Id = reader.GetGuid(reader.GetOrdinal("Id")),
                                 PlayerName = player.Name,
-                                Scores = reader.GetInt32(reader.GetOrdinal("Score")),
-                                Time = TimeSpan.FromTicks(reader.GetInt64(reader.GetOrdinal("Time"))),
-                                TurnsNumber = reader.GetInt32(reader.GetOrdinal("TurnsNumber")),
-                                MatchId = reader.GetGuid(reader.GetOrdinal("MatchId"))
+                                GameName = game.Name,
+                                Time = time,
+                                TurnsNumber = turnsNumber,
+                                Scores = score
                             };
                         }
+                    }
+                }
+            }
+        }
+
+        public Score GetScore(Guid id)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "select * from Scores where id = @id";
+                    command.Parameters.AddWithValue("@id", id);
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        if (!reader.Read())
+                            throw  new ArgumentException($"Результат с id: {id} не найден");
+
+                        int? score = null, turnsNumber = null;
+                        TimeSpan? time = null;
+
+                        if (!reader.IsDBNull(reader.GetOrdinal("Score")))
+                            score = reader.GetInt32(reader.GetOrdinal("Score"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("Time")))
+                            time = TimeSpan.FromTicks(reader.GetInt64(reader.GetOrdinal("Time")));
+                        if (!reader.IsDBNull(reader.GetOrdinal("TurnsNumber")))
+                            turnsNumber = reader.GetInt32(reader.GetOrdinal("TurnsNumber"));
+
+                        return new Score
+                        {
+                            Id = reader.GetGuid(reader.GetOrdinal("id")),
+                            PlayerName = reader.GetString(reader.GetOrdinal("PlayerName")),
+                            GameName = reader.GetString(reader.GetOrdinal("GameName")),
+                            Time = time,
+                            TurnsNumber = turnsNumber,
+                            Scores = score
+                        };
+                    }
+                }
+            }
+        }
+
+        public bool DeleteScore(Guid id)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "delete from Scores output deleted.id where id = @id";
+                    command.Parameters.AddWithValue("@id", id);
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        return reader.Read();
                     }
                 }
             }

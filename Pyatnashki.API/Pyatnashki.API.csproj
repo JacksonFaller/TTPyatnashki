@@ -33,6 +33,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Pyatnashki.API.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -54,6 +55,10 @@
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.4.4.12\lib\net45\NLog.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Swashbuckle.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cd1bb07a5ac7c7bc, processorArchitecture=MSIL">
@@ -101,6 +106,7 @@
     <Compile Include="App_Start\SwaggerConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\PyatnashkiController.cs" />
+    <Compile Include="ExceptionHandling.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -119,6 +125,24 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Pyatnashki.DataLayer.SQL\Pyatnashki.DataLayer.SQL.csproj">
+      <Project>{5B5EC232-6F0B-4A61-B6A4-ABDC22805D97}</Project>
+      <Name>Pyatnashki.DataLayer.SQL</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Pyatnashki.DataLayer\Pyatnashki.DataLayer.csproj">
+      <Project>{504B32CA-C3E3-44B3-87FF-6E0D8D995E8F}</Project>
+      <Name>Pyatnashki.DataLayer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Pyatnashki.Logger\Pyatnashki.Logger.csproj">
+      <Project>{E7AA6BD2-A70A-4B1C-A2BF-84FC2EE8AD90}</Project>
+      <Name>Pyatnashki.Logger</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Pyatnashki.Model\Pyatnashki.Model.csproj">
+      <Project>{F32A73EE-FAA6-4A66-B526-23D33BC67B18}</Project>
+      <Name>Pyatnashki.Model</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

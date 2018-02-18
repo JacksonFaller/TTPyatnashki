@@ -2,6 +2,9 @@ using System.Web.Http;
 using WebActivatorEx;
 using Pyatnashki.API;
 using Swashbuckle.Application;
+using System;
+using System.Reflection;
+using System.IO;
 
 [assembly: PreApplicationStartMethod(typeof(SwaggerConfig), "Register")]
 
@@ -61,7 +64,7 @@ namespace Pyatnashki.API
                         //c.BasicAuth("basic")
                         //    .Description("Basic HTTP Authentication");
                         //
-						// NOTE: You must also configure 'EnableApiKeySupport' below in the SwaggerUI section
+                        // NOTE: You must also configure 'EnableApiKeySupport' below in the SwaggerUI section
                         //c.ApiKey("apiKey")
                         //    .Description("API Key Authentication")
                         //    .Name("apiKey")
@@ -102,6 +105,12 @@ namespace Pyatnashki.API
                         // more Xml comment files.
                         //
                         //c.IncludeXmlComments(GetXmlCommentsPath());
+
+                        var baseDirectory = AppDomain.CurrentDomain.BaseDirectory + @"\bin\";
+                        var commentsFileName = Assembly.GetExecutingAssembly().GetName().Name + ".XML";
+                        var commentsFile = Path.Combine(baseDirectory, commentsFileName);
+
+                        c.IncludeXmlComments(commentsFile);
 
                         // Swashbuckle makes a best attempt at generating Swagger compliant JSON schemas for the various types
                         // exposed in your API. However, there may be occasions when more control of the output is needed.
