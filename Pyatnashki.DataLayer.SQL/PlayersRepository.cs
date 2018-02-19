@@ -41,8 +41,7 @@ namespace Pyatnashki.DataLayer.SQL
                     using (var reader = command.ExecuteReader())
                     {
                         if (!reader.Read())
-                            return null;
-                            //throw new ArgumentException($"Пользователь с именем: {name} не найден");
+                            throw new ArgumentException($"Пользователь с именем: {name} не найден");
                         return new Player(reader.GetString(reader.GetOrdinal("Name")));
                     }
                 }

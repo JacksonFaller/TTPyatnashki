@@ -12,26 +12,22 @@ using Pyatnashki.Model;
 
 namespace Pyatnashki.API.Controllers
 {
+    /// <summary>
+    /// Operations with game pyatnashki
+    /// </summary>
     [ExceptionHandling]
-    public class PyatnashkiController : ApiController
+    public class PyatnashkiController : GameController<PyatnashkiModel>
     {
         private const string ConnectionString =
             @"Data Source=JACKSONFALLERPC\SQLEXPRESS;Initial Catalog=TTGamesDB;Integrated Security=True";
 
-        private readonly IGamesRepository _gamesRepository;
-        private readonly IPlayersRepository _playersRepository;
-        private readonly ScoresRepository _scoresRepository;
-
         private const string GameName = "Pyatnashki";
 
         /// <summary>
-        /// Initialize repositories
+        /// Initialize scores repository
         /// </summary>
-        public PyatnashkiController()
+        public PyatnashkiController() : base(ConnectionString, GameName)
         {
-            _gamesRepository = new GamesRepository(ConnectionString);
-            _playersRepository = new PlayersRepository(ConnectionString);
-            _scoresRepository = new ScoresRepository(ConnectionString);
         }
 
         /// <summary>
@@ -40,11 +36,9 @@ namespace Pyatnashki.API.Controllers
         /// <returns>new game model</returns>
         [HttpGet]
         [Route("api/games/pyatnashki/new")]
-        public  PyatnashkiModel NewGame()
+        public new PyatnashkiModel NewGame()
         {
-            // May add size to route (api/games/pyatnashki/new/{size}"). I'm just gonna use 4 for now.
-            PyatnashkiModel model = new PyatnashkiModel(GenerateRandomField(4), DateTime.UtcNow);
-            return model;
+            return base.NewGame();
         }
 
         /// <summary>
@@ -57,15 +51,14 @@ namespace Pyatnashki.API.Controllers
         [Route("api/games/pyatnashki/move/{direction}")]
         public PyatnashkiModel MakeMove([FromBody]PyatnashkiModel model, Directions direction)
         {
-            if (model.IsSolved)
+            if (model.IsGameCompleted)
                 throw new InvalidOperationException(
                     "Game is ended. You can not make moves anymore. Call SaveScore to save results.");
             MoveCell(direction, model.Field, model.EmptyCell);
-            model.GameStats.MovesNumber++;
+            model.GameStats.TurnsNumber++;
             
-            if (IsSolved(model.Field))
+            if (model.IsGameCompletedCheck())
             {
-                model.IsSolved = true;
                 model.GameStats.TimeSpent = DateTime.UtcNow - model.GameStats.StartTime;
                 // Inset formula to calculate score
             }
@@ -80,22 +73,9 @@ namespace Pyatnashki.API.Controllers
         /// <returns>score model</returns>
         [HttpPost]
         [Route("api/games/pyatnashki/save/")]
-        public Score SaveScore([FromBody]Player player, [FromBody]PyatnashkiModel model)
+        public new Score SaveScore([FromBody]Player player, [FromBody]PyatnashkiModel model)
         {
-            if(_playersRepository.GetPlayer(player.Name) == null)
-                _playersRepository.AddPlayer(player);
-
-            if(_gamesRepository.GetGame(GameName) == null)
-                _gamesRepository.AddGame(new Game(GameName));
-
-            if (!model.IsSolved)
-                throw new InvalidOperationException("Game is not ended yet to save results!");
-
-            var score = new Score(
-                Guid.NewGuid(), player.Name, GameName, model.GameStats.TimeSpent, model.GameStats.MovesNumber);
-            _scoresRepository.AddScore(score);
-
-            return score;
+            return base.SaveScore(player, model);
         }
 
         /// <summary>
@@ -105,56 +85,9 @@ namespace Pyatnashki.API.Controllers
         /// <returns>score model</returns>
         [HttpGet]
         [Route("api/games/pyatnashki/results/{id}")]
-        public Score GetScore(Guid id)
+        public new Score GetScore(Guid id)
         {
-            return _scoresRepository.GetScore(id);
-        }
-
-        /// <summary>
-        /// Generate random game field
-        /// </summary>
-        /// <param name="size">field size</param>
-        /// <returns>square game field with randomized tile positions</returns>
-        private int[,] GenerateRandomField(int size)
-        {
-            List<int> buffer = new List<int>(size * size);
-            for (int i = 0; i < size * size; i++)
-            {
-                buffer.Add(i);
-            }
-            Random random = new Random();
-            int[,] field = new int[size, size];
-            int index;
-            for (int i = 0; i < size; i++)
-            {
-                for (int j = 0; j < size; j++)
-                {
-                    index = random.Next(buffer.Count);
-                    field[i, j] = buffer[index];
-                    buffer.RemoveAt(index);
-                }
-            }
-            return field;
-        }
-
-        /// <summary>
-        /// Check if field is in solved state
-        /// </summary>
-        /// <param name="field">square game field</param>
-        /// <returns>true if solved, else false</returns>
-        private bool IsSolved(int[,] field)
-        {
-            int value = 1;
-            for (int i = 0; i < field.GetLength(0); i++)
-            {
-                for (int j = 0; j < field.GetLength(1); j++)
-                {
-                    //if ((i + 1) * (j + 1) == field.Field.Length) break;
-                    if (field[i, j] != value % field.Length) return false;
-                    value++;
-                }
-            }
-            return true;
+            return base.GetScore(id);
         }
 
         /// <summary>

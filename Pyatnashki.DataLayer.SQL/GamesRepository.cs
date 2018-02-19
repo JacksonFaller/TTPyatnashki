@@ -41,8 +41,7 @@ namespace Pyatnashki.DataLayer.SQL
                     using (var reader = command.ExecuteReader())
                     {
                         if (!reader.Read())
-                            return null;
-                            //throw new ArgumentException($"Игра с названием: {name} не найдена");
+                            throw new ArgumentException($"Игра с названием: {name} не найдена");
                         return new Game(reader.GetString(reader.GetOrdinal("Name")));
                     }
                 }
