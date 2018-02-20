@@ -10,6 +10,9 @@ using Pyatnashki.Logger;
 
 namespace Pyatnashki.API
 {
+    /// <summary>
+    /// Exception filter attribute for game controllers
+    /// </summary>
     public class ExceptionHandling : ExceptionFilterAttribute
     {
         public override void OnException(HttpActionExecutedContext context)

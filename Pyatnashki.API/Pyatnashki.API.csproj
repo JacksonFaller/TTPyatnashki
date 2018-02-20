@@ -112,6 +112,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="ModelStateValidator.cs" />
     <Compile Include="Models\GameModel.cs" />
     <Compile Include="Models\PyatnashkiModel.cs" />
     <Compile Include="Models\Statistics.cs" />

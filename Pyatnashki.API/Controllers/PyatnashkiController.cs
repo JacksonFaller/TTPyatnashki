@@ -13,7 +13,7 @@ using Pyatnashki.Model;
 namespace Pyatnashki.API.Controllers
 {
     /// <summary>
-    /// Operations with game pyatnashki
+    /// Operations with game Pyatnashki
     /// </summary>
     [ExceptionHandling]
     public class PyatnashkiController : GameController<PyatnashkiModel>
@@ -51,31 +51,44 @@ namespace Pyatnashki.API.Controllers
         [Route("api/games/pyatnashki/move/{direction}")]
         public PyatnashkiModel MakeMove([FromBody]PyatnashkiModel model, Directions direction)
         {
+            Logger.Logger.Instance.Info($"Making move in direction: {direction.ToString()}.");
+
+            Validate(model);
+            if (!ModelState.IsValid)
+            {
+                Logger.Logger.Instance.Error(ModelState.GetErrors());
+                throw new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.BadRequest, ModelState));
+            }
+
             if (model.IsGameCompleted)
-                throw new InvalidOperationException(
-                    "Game is ended. You can not make moves anymore. Call SaveScore to save results.");
+            {
+                Logger.Logger.Instance.Error("Game is completed, no moves allowed.");
+                throw new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.BadRequest,
+                    "Game is ended. You can not make moves anymore. Call SaveScore to save results."));
+            }
+
             MoveCell(direction, model.Field, model.EmptyCell);
             model.GameStats.TurnsNumber++;
             
+            // Check field state
             if (model.IsGameCompletedCheck())
-            {
+                // Calculate game time
                 model.GameStats.TimeSpent = DateTime.UtcNow - model.GameStats.StartTime;
-                // Inset formula to calculate score
-            }
+
             return model;
         }
 
         /// <summary>
         /// Save game results
         /// </summary>
-        /// <param name="player">player info</param>
+        /// <param name="playerName">player name</param>
         /// <param name="model">game model</param>
         /// <returns>score model</returns>
         [HttpPost]
-        [Route("api/games/pyatnashki/save/")]
-        public new Score SaveScore([FromBody]Player player, [FromBody]PyatnashkiModel model)
+        [Route("api/games/pyatnashki/save/{playerName}")]
+        public new Score SaveScore([FromBody]PyatnashkiModel model, string playerName)
         {
-            return base.SaveScore(player, model);
+            return base.SaveScore(model, playerName);
         }
 
         /// <summary>

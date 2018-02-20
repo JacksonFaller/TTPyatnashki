@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Web;
 using System.Xml;
@@ -11,8 +12,16 @@ namespace Pyatnashki.API.Models
     /// </summary>
     public class PyatnashkiModel : GameModel
     {
+        /// <summary>
+        /// Game field
+        /// </summary>
+        [Required]
         public int[,] Field { get; set; }
 
+        /// <summary>
+        /// Empty cell position on game field
+        /// </summary>
+        [Required]
         public Point EmptyCell { get; set; }
 
         public PyatnashkiModel() : this(4)
@@ -27,6 +36,10 @@ namespace Pyatnashki.API.Models
             GameStats = new Statistics(startTime);
         }
 
+        /// <summary>
+        /// Find empty cell positions on field
+        /// </summary>
+        /// <returns></returns>
         public Point FindEmptyCell()
         {
             for (int i = 0; i < Field.GetLength(0); i++)
@@ -84,6 +97,9 @@ namespace Pyatnashki.API.Models
         }
     }
 
+    /// <summary>
+    /// Move directions
+    /// </summary>
     public enum Directions
     {
         Up,

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Web;
 
@@ -10,11 +11,15 @@ namespace Pyatnashki.API.Models
     /// </summary>
     public abstract class GameModel
     {
+        /// <summary>
+        /// Indicates whether game completed or not
+        /// </summary>
         public bool IsGameCompleted { get; protected set; }
 
         /// <summary>
         /// Game statistics such as score, time, turns number.
         /// </summary>
+        [Required]
         public Statistics GameStats { get; set; }
 
         /// <summary>
